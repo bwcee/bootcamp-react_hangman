@@ -1,11 +1,36 @@
 import React, { useState } from "react";
 
-/* guess state and setGuess function passed in here from App function */
-const Form = ({ guess, setGuess }) => {
+/* 
+1. all the different states, set state functions and constants passed here
+2. set state functions dun cause infinite loop where
+- set state -> re-render -> set state -> re-render ...
+- when component re-rendered, set state functions not called immediately cos set state functions are inside letterInputChange(). so set state functions only triggered when there is change in <input>
+*/
+const Form = ({
+  secretWord,
+  guess,
+  setGuess,
+  guessedLetters,
+  setGuessedLetters,
+  hangMan,
+  setHangMan,
+}) => {
   const letterInputChange = (ev) => {
     ev.target.value.length > 1
       ? alert("only key in one letter!")
       : setGuess(ev.target.value);
+
+    if (guess != "" && !secretWord.includes(guess)) {
+      guessedLetters.push(hangMan.shift());
+    } else {
+      secretWord.forEach((letter, index) => {
+        if (guess == letter) {
+          guessedLetters[index] = guess;
+        }
+      });
+    }
+    setGuessedLetters([...guessedLetters]);
+    setHangMan([...hangMan]);
   };
 
   return (
@@ -18,41 +43,10 @@ const Form = ({ guess, setGuess }) => {
   );
 };
 
-/* 
-whole bunch of states and constants passed in here since game logic happens here
-@ states: guess, guessedLetters, hangman
-@ set state function: setGuessLetters
-@ constants: secretWord  
-*/
-const Guess = ({
-  secretWord,
-  guess,
-  guessedLetters,
-  setGuessedLetters,
-  hangMan,
-}) => {
-  /* 
- 1. guess not empty & not in secretWord, get hangMan state's first element & tack it to guessedLetters state's bum
- 2. otherwise guess is right. loop thru each letter in secretWord. where guess matches letter in secretWord, update the matching position in guessedLetters w guess    
- */
-  if (guess != "" && !secretWord.includes(guess)) {
-    guessedLetters.push(hangMan.shift());
-  } else {
-    secretWord.forEach((letter, index) => {
-      if (guess == letter) {
-        guessedLetters[index] = guess;
-      }
-    });
-  }
-
-  /*  
-assign array of react elements to displayGuess
-*/
+const Guess = ({ guessedLetters }) => {
   const displayGuess = guessedLetters.map((el, index) => {
     return <span key={index}>{el} </span>;
   });
-
-  // setGuessedLetters([...guessedLetters]);
 
   return <div>{displayGuess}</div>;
 };
@@ -66,25 +60,28 @@ export default function App() {
   - so just place everything in App and pass them to the various components as needed
   - prob not such a good practice...dunno...  
   */
-  const [guess, setGuess] = useState("");
-  const startGuess = ["_", "_", "_", "_", "_", "_"];
-  /* initialise guesseLetters to be an array with only - */
-  const [guessedLetters, setGuessedLetters] = useState(startGuess);
   const secretWord = ["b", "a", "n", "a", "n", "a"];
+  const [guess, setGuess] = useState("");
+  /* initialise guesseLetters state to be an array with only - */
+  const startGuess = ["_", "_", "_", "_", "_", "_"];
+  const [guessedLetters, setGuessedLetters] = useState(startGuess);
+  /* initialise hangMan state to be an array the diff symbols */
   const hangSymbols = ["(", "凸", "ಠ", "益", "ಠ", ")", "凸"];
   const [hangMan, setHangMan] = useState(hangSymbols);
 
   return (
     <div>
       <h1> Welcome to Hangman!</h1>
-      <Form guess={guess} setGuess={setGuess} />
-      <Guess
+      <Form
         secretWord={secretWord}
         guess={guess}
+        setGuess={setGuess}
         guessedLetters={guessedLetters}
         setGuessedLetters={setGuessedLetters}
         hangMan={hangMan}
+        setHangMan={setHangMan}
       />
+      <Guess guessedLetters={guessedLetters} />
     </div>
   );
 }
